@@ -281,19 +281,18 @@ class _GameBoardState extends State<GameBoard> {
 
                 // current moving piece
                 if (currentPiece.position.contains(index)) {
-                  return Pixel(color: currentPiece.color, child: index);
+                  return Pixel(color: currentPiece.color);
                 }
                 // landed piece
                 else if (gameBoard[row][col] != null) {
                   final Tetromino? tetrominoType = gameBoard[row][col];
                   return Pixel(
                     color: tetrominoColors[tetrominoType]!,
-                    child: '',
                   ); // you can change color based on type
                 }
                 // blank pixel
                 else {
-                  return Pixel(color: Colors.grey[900]!, child: index);
+                  return Pixel(color: Colors.grey[900]!);
                 }
               },
             ),
