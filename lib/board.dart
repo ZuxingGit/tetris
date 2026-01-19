@@ -48,7 +48,7 @@ class _GameBoardState extends State<GameBoard> {
     currentPiece.initializePiece();
 
     // frame refresh rate
-    Duration frameRate = const Duration(milliseconds: 800);
+    Duration frameRate = const Duration(milliseconds: 400);
     gameLoop(frameRate);
   }
 
@@ -80,8 +80,11 @@ class _GameBoardState extends State<GameBoard> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Game Over'),
-        content: Text('Your score: $currentScore'),
+        title: Text('Game Over', textAlign: TextAlign.center),
+        content: Text(
+          'Your score: $currentScore',
+          style: TextStyle(fontSize: 16),
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -301,34 +304,64 @@ class _GameBoardState extends State<GameBoard> {
 
           Text(
             'Score: $currentScore',
-            style: TextStyle(color: Colors.white, fontSize: 24),
+            style: TextStyle(color: Colors.white, fontSize: 20),
           ),
 
           // GAME CONTROLS
           Padding(
-            padding: const EdgeInsets.only(bottom: 50.0, top: 50),
+            padding: const EdgeInsets.only(bottom: 50.0, top: 15),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 // left
-                IconButton(
-                  onPressed: moveLeft,
-                  color: Colors.white,
-                  icon: Icon(Icons.arrow_back_ios),
+                SizedBox.square(
+                  dimension: 92,
+                  child: ElevatedButton(
+                    onPressed: moveLeft,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade800,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    child: const Icon(Icons.arrow_back_ios, size: 34),
+                  ),
                 ),
 
                 // rotate
-                IconButton(
-                  onPressed: rotatePiece,
-                  color: Colors.white,
-                  icon: Icon(Icons.rotate_right),
+                SizedBox.square(
+                  dimension: 92,
+                  child: ElevatedButton(
+                    onPressed: rotatePiece,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade800,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    child: const Icon(Icons.rotate_right, size: 36),
+                  ),
                 ),
 
                 // right
-                IconButton(
-                  onPressed: moveRight,
-                  color: Colors.white,
-                  icon: Icon(Icons.arrow_forward_ios),
+                SizedBox.square(
+                  dimension: 92,
+                  child: ElevatedButton(
+                    onPressed: moveRight,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade800,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    child: const Icon(Icons.arrow_forward_ios, size: 34),
+                  ),
                 ),
               ],
             ),
