@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:tetris/effects/effect_layer.dart';
+import 'package:tetris/effects/heart_fly_effect.dart';
 import 'package:tetris/piece.dart';
 import 'package:tetris/pixel.dart';
 import 'package:tetris/values.dart';
@@ -36,6 +38,8 @@ class _GameBoardState extends State<GameBoard> {
   // game over status
   bool gameOver = false;
 
+  final Map<int, GlobalKey> pixelKeys = {};
+
   @override
   void initState() {
     super.initState();
@@ -48,7 +52,7 @@ class _GameBoardState extends State<GameBoard> {
     currentPiece.initializePiece();
 
     // frame refresh rate
-    Duration frameRate = const Duration(milliseconds: 400);
+    Duration frameRate = const Duration(milliseconds: 500);
     gameLoop(frameRate);
   }
 
@@ -57,7 +61,11 @@ class _GameBoardState extends State<GameBoard> {
     Timer.periodic(frameRate, (timer) {
       setState(() {
         // clear lines
-        clearLines();
+        final List<int> clearedRows = [];
+        clearLines(clearedRows);
+        if (clearedRows.isNotEmpty) {
+          playClearEffect(clearedRows);
+        }
 
         // check if piece has landed
         checkLanding();
@@ -221,7 +229,7 @@ class _GameBoardState extends State<GameBoard> {
   }
 
   // clear lines
-  void clearLines() {
+  void clearLines(List<int> clearedRows) {
     // step 1: Loop through each row of the game board from bottom to top
     for (int row = colLength - 1; row >= 0; row--) {
       // step 2: Initialize a variable to track if the row is full
@@ -237,6 +245,8 @@ class _GameBoardState extends State<GameBoard> {
 
       // step 4: If the row is full, clear the row and shift rows down
       if (rowIsFull) {
+        // add cleared row to the list
+        clearedRows.add(row);
         // step 5: move all rows above down by one position
         for (int r = row; r > 0; r--) {
           // copy the above row to the current row
@@ -248,6 +258,25 @@ class _GameBoardState extends State<GameBoard> {
 
         // step 7: Increase the score!
         currentScore++;
+        row++; // recheck the same row since rows have shifted down
+      }
+    }
+  }
+
+  void playClearEffect(List<int> clearedRows) {
+    for (final row in clearedRows) {
+      for (int col = 0; col < rowLength; col++) {
+        final index = row * rowLength + col;
+        final key = pixelKeys[index];
+
+        if (key?.currentContext == null) continue;
+
+        final box = key!.currentContext!.findRenderObject() as RenderBox;
+        final position = box.localToGlobal(Offset.zero);
+
+        EffectLayer.of(
+          context,
+        ).play(HeartFlyEffect(startPosition: position, size: box.size.width));
       }
     }
   }
@@ -278,25 +307,36 @@ class _GameBoardState extends State<GameBoard> {
                 crossAxisCount: rowLength,
               ),
               itemBuilder: (context, index) {
+                pixelKeys.putIfAbsent(index, () => GlobalKey());
+
                 // get row and col of each index
                 int row = index ~/ rowLength;
                 int col = index % rowLength;
 
                 // current moving piece
                 if (currentPiece.position.contains(index)) {
-                  return Pixel(color: currentPiece.color, child: index);
+                  return Pixel(
+                    key: pixelKeys[index],
+                    color: currentPiece.color,
+                    child: index,
+                  );
                 }
                 // landed piece
                 else if (gameBoard[row][col] != null) {
                   final Tetromino? tetrominoType = gameBoard[row][col];
                   return Pixel(
+                    key: pixelKeys[index],
                     color: tetrominoColors[tetrominoType]!,
                     child: '',
                   ); // you can change color based on type
                 }
                 // blank pixel
                 else {
-                  return Pixel(color: Colors.grey[900]!, child: index);
+                  return Pixel(
+                    key: pixelKeys[index],
+                    color: Colors.grey[900]!,
+                    child: index,
+                  );
                 }
               },
             ),
