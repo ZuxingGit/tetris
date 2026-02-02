@@ -1,8 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'effect_layer.dart';
+import 'package:tetris/effects/effect_widget.dart';
 
-class HeartFlyEffect extends StatefulWidget {
+class HeartFlyEffect extends StatefulWidget implements EffectWidget {
   final Offset startPosition;
   final double size;
 
