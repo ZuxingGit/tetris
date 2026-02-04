@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tetris/effects/effect_widget.dart';
 
 class EffectLayer extends StatefulWidget {
   final Widget child;
@@ -6,7 +7,9 @@ class EffectLayer extends StatefulWidget {
   const EffectLayer({super.key, required this.child});
 
   static _EffectLayerState of(BuildContext context) {
-    return context.findAncestorStateOfType<_EffectLayerState>()!;
+    final state = context.findAncestorStateOfType<_EffectLayerState>();
+    assert(state != null, 'EffectLayer not found in context');
+    return state!;
   }
 
   @override
@@ -14,15 +17,15 @@ class EffectLayer extends StatefulWidget {
 }
 
 class _EffectLayerState extends State<EffectLayer> {
-  final List<Widget> _effects = [];
+  final List<EffectWidget> _effects = [];
 
-  void play(Widget effect) {
+  void play(EffectWidget effect) {
     setState(() {
       _effects.add(effect);
     });
   }
 
-  void remove(Widget effect) {
+  void remove(EffectWidget effect) {
     setState(() {
       _effects.remove(effect);
     });

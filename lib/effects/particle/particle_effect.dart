@@ -33,7 +33,7 @@ class _ParticleClearEffectState extends State<ParticleClearEffect>
     super.initState();
 
     // create particles
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 60; i++) {
       final angle = random.nextDouble() * 2 * pi;
       final speed = 60 + random.nextDouble() * 120;
 

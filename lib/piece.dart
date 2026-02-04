@@ -41,8 +41,6 @@ class Piece {
       case Tetromino.T:
         position = [-26, -16, -6, -15];
         break;
-      default:
-        position = [];
     }
   }
 
@@ -64,7 +62,6 @@ class Piece {
           position[i] += rowLength;
         }
         break;
-      default:
     }
   }
 

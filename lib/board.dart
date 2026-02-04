@@ -1,8 +1,14 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:tetris/effects/bird_fly_effect.dart';
+import 'package:tetris/effects/clear_effect_type.dart';
+import 'package:tetris/effects/cloud_fly_effect.dart';
 import 'package:tetris/effects/effect_layer.dart';
+import 'package:tetris/effects/effect_widget.dart';
 import 'package:tetris/effects/heart_fly_effect.dart';
+import 'package:tetris/effects/particle/particle_effect.dart';
+import 'package:tetris/effects/smoke/smoke_clear_effect.dart';
 import 'package:tetris/piece.dart';
 import 'package:tetris/pixel.dart';
 import 'package:tetris/values.dart';
@@ -21,6 +27,14 @@ List<List<Tetromino?>> gameBoard = List.generate(
   (i) => List.generate(rowLength, (j) => null),
 );
 
+class ClearedCell {
+  final int row;
+  final int col;
+  final Tetromino type;
+
+  ClearedCell(this.row, this.col, this.type);
+}
+
 class GameBoard extends StatefulWidget {
   const GameBoard({super.key});
 
@@ -37,6 +51,8 @@ class _GameBoardState extends State<GameBoard> {
 
   // game over status
   bool gameOver = false;
+
+  final Random _random = Random();
 
   final Map<int, GlobalKey> pixelKeys = {};
 
@@ -62,9 +78,14 @@ class _GameBoardState extends State<GameBoard> {
       setState(() {
         // clear lines
         final List<int> clearedRows = [];
-        clearLines(clearedRows);
-        if (clearedRows.isNotEmpty) {
-          playClearEffect(clearedRows);
+        final List<ClearedCell> clearedCells = []; // to store cleared cells
+        clearLines(clearedRows, clearedCells);
+        if (clearedRows.isNotEmpty && clearedCells.isNotEmpty) {
+          playClearEffect(
+            clearedRows,
+            clearedCells,
+            effect: randomClearEffect(),
+          );
         }
 
         // check if piece has landed
@@ -81,6 +102,13 @@ class _GameBoardState extends State<GameBoard> {
         currentPiece.movePiece(Direction.down);
       });
     });
+  }
+
+  ClearEffectType randomClearEffect() {
+    final effects = ClearEffectType.values;
+    final list = effects.toList(growable: false);
+    // return list[_random.nextInt(list.length)];
+    return ClearEffectType.smoke;
   }
 
   // game over message
@@ -228,8 +256,8 @@ class _GameBoardState extends State<GameBoard> {
     });
   }
 
-  // clear lines
-  void clearLines(List<int> clearedRows) {
+  /** clear lines */
+  void clearLines(List<int> clearedRows, List<ClearedCell> clearedCells) {
     // step 1: Loop through each row of the game board from bottom to top
     for (int row = colLength - 1; row >= 0; row--) {
       // step 2: Initialize a variable to track if the row is full
@@ -247,6 +275,10 @@ class _GameBoardState extends State<GameBoard> {
       if (rowIsFull) {
         // add cleared row to the list
         clearedRows.add(row);
+        // store cleared cells
+        for (int col = 0; col < rowLength; col++) {
+          clearedCells.add(ClearedCell(row, col, gameBoard[row][col]!));
+        }
         // step 5: move all rows above down by one position
         for (int r = row; r > 0; r--) {
           // copy the above row to the current row
@@ -263,21 +295,78 @@ class _GameBoardState extends State<GameBoard> {
     }
   }
 
-  void playClearEffect(List<int> clearedRows) {
-    for (final row in clearedRows) {
-      for (int col = 0; col < rowLength; col++) {
-        final index = row * rowLength + col;
-        final key = pixelKeys[index];
+  void playClearEffect(
+    List<int> clearedRows,
+    List<ClearedCell> clearedCells, {
+    ClearEffectType effect = ClearEffectType.heart,
+  }) {
+    if (clearedRows.isEmpty || clearedCells.isEmpty) return;
 
-        if (key?.currentContext == null) continue;
+    // Particle should run once per cleared cell (not multiplied by row/col loops).
+    if (effect == ClearEffectType.particle) {
+      final first = clearedCells.first;
+      final firstIndex = first.row * rowLength + first.col;
+      final firstKey = pixelKeys[firstIndex];
+      final fallbackSize = (firstKey?.currentContext != null)
+          ? (firstKey!.currentContext!.findRenderObject() as RenderBox)
+                .size
+                .width
+          : 22.0;
 
-        final box = key!.currentContext!.findRenderObject() as RenderBox;
-        final position = box.localToGlobal(Offset.zero);
-
-        EffectLayer.of(
-          context,
-        ).play(HeartFlyEffect(startPosition: position, size: box.size.width));
+      for (final cell in clearedCells) {
+        final color = tetrominoColors[cell.type]!;
+        EffectLayer.of(context).play(
+          ParticleClearEffect(
+            startPosition: getCellPosition(cell.row, cell.col),
+            size: fallbackSize,
+            color: color,
+          ),
+        );
       }
+      return;
+    }
+
+    // Non-particle effects: one effect per cleared cell.
+    for (final cell in clearedCells) {
+      final index = cell.row * rowLength + cell.col;
+      final key = pixelKeys[index];
+      if (key?.currentContext == null) continue;
+
+      final box = key!.currentContext!.findRenderObject() as RenderBox;
+      final position = box.localToGlobal(Offset.zero);
+
+      final EffectWidget effectWidget;
+      switch (effect) {
+        case ClearEffectType.heart:
+          effectWidget = HeartFlyEffect(
+            startPosition: position,
+            size: box.size.width,
+          );
+          break;
+        case ClearEffectType.bird:
+          effectWidget = BirdFlyEffect(
+            startPosition: position,
+            size: box.size.width,
+          );
+          break;
+        case ClearEffectType.cloud:
+          effectWidget = CloudFlyEffect(
+            startPosition: position,
+            size: box.size.width,
+          );
+          break;
+        case ClearEffectType.smoke:
+          effectWidget = SmokeClearEffect(
+            startPosition: position,
+            size: box.size.width,
+            color: tetrominoColors[cell.type]!,
+          );
+          break;
+        case ClearEffectType.particle:
+          continue;
+      }
+
+      EffectLayer.of(context).play(effectWidget);
     }
   }
 
@@ -409,5 +498,18 @@ class _GameBoardState extends State<GameBoard> {
         ],
       ),
     );
+  }
+
+  Offset getCellPosition(int row, int col) {
+    final index = row * rowLength + col;
+    final key = pixelKeys[index];
+
+    if (key?.currentContext == null) {
+      return Offset.zero;
+    }
+
+    final box = key!.currentContext!.findRenderObject() as RenderBox;
+    final position = box.localToGlobal(Offset.zero);
+    return position;
   }
 }
