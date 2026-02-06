@@ -1,1 +1,1 @@
-enum ClearEffectType { heart, bird, cloud, particle, smoke }
+enum ClearEffectType { heart, bird, cloud, particle, smoke, bubble }

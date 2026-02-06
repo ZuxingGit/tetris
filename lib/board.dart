@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:tetris/effects/bird_fly_effect.dart';
+import 'package:tetris/effects/bubble_fly_effect.dart';
 import 'package:tetris/effects/clear_effect_type.dart';
 import 'package:tetris/effects/cloud_fly_effect.dart';
 import 'package:tetris/effects/effect_layer.dart';
@@ -108,7 +109,7 @@ class _GameBoardState extends State<GameBoard> {
     final effects = ClearEffectType.values;
     final list = effects.toList(growable: false);
     // return list[_random.nextInt(list.length)];
-    return ClearEffectType.smoke;
+    return ClearEffectType.bubble;
   }
 
   // game over message
@@ -364,6 +365,12 @@ class _GameBoardState extends State<GameBoard> {
           break;
         case ClearEffectType.particle:
           continue;
+        case ClearEffectType.bubble:
+          effectWidget = BubbleFlyEffect(
+            startPosition: position,
+            size: box.size.width,
+          );
+          break;
       }
 
       EffectLayer.of(context).play(effectWidget);
