@@ -108,8 +108,8 @@ class _GameBoardState extends State<GameBoard> {
   ClearEffectType randomClearEffect() {
     final effects = ClearEffectType.values;
     final list = effects.toList(growable: false);
-    // return list[_random.nextInt(list.length)];
-    return ClearEffectType.bubble;
+    return list[_random.nextInt(list.length)];
+    // return ClearEffectType.heart;
   }
 
   // game over message
@@ -414,7 +414,6 @@ class _GameBoardState extends State<GameBoard> {
                   return Pixel(
                     key: pixelKeys[index],
                     color: currentPiece.color,
-                    child: index,
                   );
                 }
                 // landed piece
@@ -423,16 +422,11 @@ class _GameBoardState extends State<GameBoard> {
                   return Pixel(
                     key: pixelKeys[index],
                     color: tetrominoColors[tetrominoType]!,
-                    child: '',
                   ); // you can change color based on type
                 }
                 // blank pixel
                 else {
-                  return Pixel(
-                    key: pixelKeys[index],
-                    color: Colors.grey[900]!,
-                    child: index,
-                  );
+                  return Pixel(key: pixelKeys[index], color: Colors.grey[900]!);
                 }
               },
             ),
